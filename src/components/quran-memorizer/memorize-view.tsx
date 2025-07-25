@@ -83,7 +83,6 @@ export function MemorizeView() {
         const [surahsRes, editionsRes] = await Promise.all([getSurahs(), getAudioEditions()]);
         setSurahs(surahsRes);
         setAudioEditions(editionsRes);
-        await loadAyahs(settings.surah);
       } catch (error) {
         console.error("Failed to load initial data", error);
         toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل البيانات الأساسية" });
@@ -92,7 +91,13 @@ export function MemorizeView() {
       }
     }
     loadInitialData();
-  }, [loadAyahs, settings.surah]);
+  }, []);
+
+  useEffect(() => {
+    if (settings.surah) {
+        loadAyahs(settings.surah);
+    }
+  }, [settings.surah, loadAyahs]);
   
   // Effect to generate playlist when settings change
   useEffect(() => {
@@ -146,7 +151,7 @@ export function MemorizeView() {
       }
     };
 
-    if (isPlaying) {
+    if (isPlaying && playlist.length > 0) {
       playTrack(currentTrackIndex);
     } else {
       audioRef.current?.pause();
@@ -158,7 +163,9 @@ export function MemorizeView() {
   }, [playNext]);
 
   const handlePlayPause = () => {
-    setIsPlaying(prev => !prev);
+    if (playlist.length > 0) {
+      setIsPlaying(prev => !prev);
+    }
   };
   
   const handleNext = useCallback(() => {
@@ -190,7 +197,7 @@ export function MemorizeView() {
     if (settings.autoScroll && currentAyahRef.current) {
       currentAyahRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [currentTrackIndex, settings.autoScroll]);
+  }, [currentTrackIndex, settings.autoScroll, playlist]);
   
   const handleSettingsChange = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
       setSettings(prev => ({...prev, [key]: value}));
@@ -359,7 +366,7 @@ export function MemorizeView() {
           </div>
           {playlist.length > 0 && currentTrackIndex < playlist.length &&
             <div className="text-center text-sm text-muted-foreground mt-2">
-                {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''} (${(currentTrackIndex % settings.repetitions) + 1}/${settings.repetitions})`}
+                {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''} (${(currentTrackIndex % (settings.repetitions || 1)) + 1}/${settings.repetitions})`}
             </div>
           }
         </div>
@@ -367,5 +374,3 @@ export function MemorizeView() {
     </div>
   );
 }
-
-    
