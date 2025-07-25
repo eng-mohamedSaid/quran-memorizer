@@ -44,30 +44,35 @@ const getTafsirFlow = ai.defineFlow(
     outputSchema: GetTafsirOutputSchema,
   },
   async input => {
-    // Call AlQuran Cloud API to get the Tafsir
-    const apiUrl = `https://api.alquran.cloud/v1/ayah/${input.surah}:${input.ayah}/editions/quran-tafsir-uthmani`;
+    const apiUrl = `https://api.alquran.cloud/v1/ayah/${input.surah}:${input.ayah}/ar.muyassar`;
 
     try {
       const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
       const data = await response.json();
 
-      if (data.data && data.data[0] && data.data[0].text) {
-        const tafsirText = data.data[0].text;
-        // Call the prompt to refine the tafsir (though currently, it primarily extracts).
-        const {output} = await getTafsirPrompt({
-          ...input,
-        });
+      if (data.data && data.data.text) {
+        const tafsirText = data.data.text;
         return {
           tafsir: tafsirText,
         };
       } else {
-        throw new Error('Tafsir not found for the given Surah and Ayah.');
+        throw new Error('Tafsir not found for the given Surah and Ayah in the API response.');
       }
     } catch (error: any) {
       console.error('Error fetching Tafsir:', error);
-      return {
-        tafsir: `Error fetching Tafsir: ${error.message}`,
-      };
+      // Fallback to model if API fails
+      try {
+        const {output} = await getTafsirPrompt(input);
+        return output || { tafsir: `Error fetching Tafsir: ${error.message}` };
+      } catch (promptError: any) {
+         console.error('Error generating Tafsir from prompt:', promptError);
+         return {
+            tafsir: `Error fetching Tafsir: ${promptError.message}`,
+         }
+      }
     }
   }
 );

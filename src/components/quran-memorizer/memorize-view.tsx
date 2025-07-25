@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTafsir } from "@/ai/flows/get-tafsir";
 import { toast } from "@/hooks/use-toast";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, BookOpen, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, BookOpen, ChevronUp, ChevronDown, Trash2, Eye, EyeOff } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type PlaybackMode = 'byAyah' | 'bySelection';
@@ -30,6 +30,7 @@ interface Settings {
   autoScroll: boolean;
   loop: boolean;
   playbackMode: PlaybackMode;
+  showAyahs: boolean;
 }
 
 interface PlaylistItem {
@@ -45,10 +46,6 @@ export function MemorizeView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const [settings, setSettings] = useLocalStorage<Settings>("quran-memorizer-settings", {
     surah: 1,
     fromAyah: 1,
@@ -58,9 +55,10 @@ export function MemorizeView() {
     autoScroll: true,
     loop: false,
     playbackMode: 'bySelection',
+    showAyahs: true,
   });
   
-  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode } = settings;
+  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode, showAyahs } = settings;
 
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -72,6 +70,10 @@ export function MemorizeView() {
   const [tafsir, setTafsir] = useState<{ [key: string]: string }>({});
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
   
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     async function loadInitialData() {
       setIsLoading(true);
@@ -90,6 +92,10 @@ export function MemorizeView() {
   }, []);
 
   const loadAyahs = useCallback(async (surahNumber: number) => {
+    if (!showAyahs) {
+        setAyahsData([]);
+        return;
+    }
     try {
       const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
       const combined = ayahsRes.map(ayah => ({
@@ -102,7 +108,7 @@ export function MemorizeView() {
       console.error("Failed to load ayahs", error);
       toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل الآيات" });
     }
-  }, []);
+  }, [showAyahs]);
 
   useEffect(() => {
     if (surah) {
@@ -160,10 +166,8 @@ export function MemorizeView() {
         const audioData = await getAudioForAyah(track.surah, track.ayah, track.reciterId);
         if (audioData?.audio && audioRef.current) {
           audioRef.current.src = audioData.audio;
-          // Check if component is still in a playing state before trying to play
           if(isPlaying) {
              await audioRef.current.play().catch(e => {
-                // Autoplay was prevented.
                 console.error("Audio play failed:", e);
                 setIsPlaying(false);
              });
@@ -262,8 +266,9 @@ export function MemorizeView() {
   }, [surahs, setSettings]);
 
   const displayedAyahs = useMemo(() => {
+    if (!showAyahs) return [];
     return ayahsData.filter(a => a.numberInSurah >= fromAyah && a.numberInSurah <= toAyah);
-  }, [ayahsData, fromAyah, toAyah]);
+  }, [ayahsData, fromAyah, toAyah, showAyahs]);
 
   if (!isClient) {
     return (
@@ -307,10 +312,10 @@ export function MemorizeView() {
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
       <audio ref={audioRef} onEnded={handleAudioEnded} />
       <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
-        <CardHeader><CardTitle>الإعدادات</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-right">الإعدادات</CardTitle></CardHeader>
         <CardContent className="flex-grow overflow-y-auto text-right">
           <div className="space-y-6">
-            <div>
+            <div className="text-right">
               <Label htmlFor="surah">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select value={String(surah)} onValueChange={handleSurahChange}>
@@ -321,22 +326,22 @@ export function MemorizeView() {
               </Select>
               }
             </div>
-            <div className="flex gap-4">
-              <div>
+            <div className="flex gap-4 text-right">
+              <div className="flex-1">
                 <Label htmlFor="fromAyah">من آية</Label>
                 <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Math.max(1, Number(e.target.value)))} />
               </div>
-              <div>
+              <div className="flex-1">
                 <Label htmlFor="toAyah">إلى آية</Label>
                 <Input id="toAyah" type="number" min={fromAyah} max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Math.min(selectedSurah?.numberOfAyahs || 1, Number(e.target.value)))} />
               </div>
             </div>
-            <div>
+            <div className="text-right">
               <Label htmlFor="repetitions">تكرار الآية</Label>
               <Input id="repetitions" type="number" min="0" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(0, Number(e.target.value)))} />
             </div>
 
-            <div>
+            <div className="text-right">
               <Label>نمط التشغيل</Label>
               <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
                 <div className="flex items-center justify-end space-x-2 space-x-reverse">
@@ -350,7 +355,7 @@ export function MemorizeView() {
               </RadioGroup>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 text-right">
                 <Label>القراء المختارون</Label>
                  <ScrollArea className="h-40 border rounded-md p-2">
                     <div className="space-y-2">
@@ -371,11 +376,11 @@ export function MemorizeView() {
                 </ScrollArea>
             </div>
 
-            <div>
+            <div className="text-right">
               <Label>إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select onValueChange={addReciter} value="">
-                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
+                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectValue>
                 <SelectContent>
                   {audioEditions
                     .filter(e => !selectedReciters.includes(e.identifier))
@@ -388,8 +393,15 @@ export function MemorizeView() {
             <Separator />
             
             <div className="flex items-center justify-between">
+              <Label htmlFor="show-ayahs" className="flex items-center gap-2">
+                {showAyahs ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                إظهار الآيات
+              </Label>
+              <Switch id="show-ayahs" checked={showAyahs} onCheckedChange={val => handleSettingsChange('showAyahs', val)} />
+            </div>
+            <div className="flex items-center justify-between">
               <Label htmlFor="auto-scroll">التمرير التلقائي</Label>
-              <Switch id="auto-scroll" checked={autoScroll} onCheckedChange={val => handleSettingsChange('autoScroll', val)} />
+              <Switch id="auto-scroll" checked={autoScroll} onCheckedChange={val => handleSettingsChange('autoScroll', val)} disabled={!showAyahs} />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="loop">إعادة تشغيل المقطع</Label>
@@ -402,40 +414,48 @@ export function MemorizeView() {
       <div className="flex-grow h-full flex flex-col">
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
-            <div className="p-6 text-2xl/loose leading-loose font-serif text-right">
-              {ayahsData.length > 0 ? displayedAyahs
-                .map(ayah => {
-                  const currentTrack = playlist[currentTrackIndex];
-                  const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
-                  return (
-                    <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
-                      <span className={`inline-block p-2 rounded-md transition-colors duration-300 ${isActive ? 'bg-primary/20' : ''}`}>
-                          <span className="text-primary font-bold">﴿</span>
-                          {ayah.arabicText}
-                          <span className="text-primary font-bold">﴾</span>
-                          <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
-                      </span>
-                      <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-left">{ayah.englishText}</p>
-                       <Dialog>
-                        <DialogTrigger asChild>
-                           <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>تفسير الآية {ayah.numberInSurah} من سورة {selectedSurah?.name}</DialogTitle>
-                          </DialogHeader>
-                          {isTafsirLoading ? <Skeleton className="h-20 w-full" /> : 
-                          <ScrollArea className="max-h-96">
-                            <p className="py-4 text-base/loose">{tafsir[`${surah}:${ayah.numberInSurah}`] || "لا يتوفر تفسير حاليًا."}</p>
-                          </ScrollArea>
-                          }
-                        </DialogContent>
-                      </Dialog>
-                      <Separator className="my-4"/>
-                    </div>
-                  );
-                }) : <Skeleton className="h-full w-full" />}
-            </div>
+            {showAyahs ? (
+                <div className="p-6 text-2xl/loose leading-loose font-serif text-right">
+                  {ayahsData.length > 0 ? displayedAyahs
+                    .map(ayah => {
+                      const currentTrack = playlist[currentTrackIndex];
+                      const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
+                      return (
+                        <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
+                          <span className={`inline-block p-2 rounded-md transition-colors duration-300 ${isActive ? 'bg-primary/20' : ''}`}>
+                              <span className="text-primary font-bold">﴿</span>
+                              {ayah.arabicText}
+                              <span className="text-primary font-bold">﴾</span>
+                              <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
+                          </span>
+                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-start">{ayah.englishText}</p>
+                           <Dialog>
+                            <DialogTrigger asChild>
+                               <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle className="text-right">تفسير الآية {ayah.numberInSurah} من سورة {selectedSurah?.name}</DialogTitle>
+                              </DialogHeader>
+                              {isTafsirLoading ? <Skeleton className="h-20 w-full" /> : 
+                              <ScrollArea className="max-h-96">
+                                <p className="py-4 text-base/loose text-right">{tafsir[`${surah}:${ayah.numberInSurah}`] || "لا يتوفر تفسير حاليًا."}</p>
+                              </ScrollArea>
+                              }
+                            </DialogContent>
+                          </Dialog>
+                          <Separator className="my-4"/>
+                        </div>
+                      );
+                    }) : <Skeleton className="h-full w-full" />}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                    <EyeOff className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold">الآيات مخفية</h3>
+                    <p className="text-muted-foreground">اضغط على زر "إظهار الآيات" في الإعدادات لعرضها.</p>
+                </div>
+              )}
           </ScrollArea>
         </Card>
         <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
@@ -459,5 +479,3 @@ export function MemorizeView() {
     </div>
   );
 }
-
-    
