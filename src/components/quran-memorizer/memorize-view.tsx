@@ -16,6 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getTafsir } from "@/ai/flows/get-tafsir";
 import { toast } from "@/hooks/use-toast";
 import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, BookOpen, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+type PlaybackMode = 'byAyah' | 'bySelection';
 
 interface Settings {
   surah: number;
@@ -25,6 +28,7 @@ interface Settings {
   selectedReciters: string[];
   autoScroll: boolean;
   loop: boolean;
+  playbackMode: PlaybackMode;
 }
 
 interface PlaylistItem {
@@ -47,9 +51,10 @@ export function MemorizeView() {
     selectedReciters: ["ar.alafasy"],
     autoScroll: true,
     loop: false,
+    playbackMode: 'byAyah',
   });
   
-  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop } = settings;
+  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode } = settings;
 
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -102,17 +107,27 @@ export function MemorizeView() {
   useEffect(() => {
     const newPlaylist: PlaylistItem[] = [];
     if (fromAyah <= toAyah && selectedReciters.length > 0) {
-      for (let ayah = fromAyah; ayah <= toAyah; ayah++) {
-        for (const reciterId of selectedReciters) {
-          for (let i = 0; i < repetitions; i++) {
-            newPlaylist.push({ surah: surah, ayah, reciterId });
-          }
+        if (playbackMode === 'byAyah') {
+            for (let ayah = fromAyah; ayah <= toAyah; ayah++) {
+                for (let i = 0; i < repetitions; i++) {
+                    for (const reciterId of selectedReciters) {
+                        newPlaylist.push({ surah, ayah, reciterId });
+                    }
+                }
+            }
+        } else { // bySelection
+            for (const reciterId of selectedReciters) {
+                for (let i = 0; i < repetitions; i++) {
+                    for (let ayah = fromAyah; ayah <= toAyah; ayah++) {
+                        newPlaylist.push({ surah, ayah, reciterId });
+                    }
+                }
+            }
         }
-      }
     }
     setPlaylist(newPlaylist);
     setCurrentTrackIndex(0);
-  }, [fromAyah, toAyah, selectedReciters, repetitions, surah]);
+}, [fromAyah, toAyah, selectedReciters, repetitions, surah, playbackMode]);
 
   const playNext = useCallback(() => {
     setCurrentTrackIndex(prevIndex => {
@@ -273,8 +288,22 @@ export function MemorizeView() {
               </div>
             </div>
             <div>
-              <Label htmlFor="repetitions">التكرار لكل قارئ</Label>
-              <Input id="repetitions" type="number" min="1" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(1, Number(e.target.value)))} />
+              <Label htmlFor="repetitions">تكرار الآية</Label>
+              <Input id="repetitions" type="number" min="0" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(0, Number(e.target.value)))} />
+            </div>
+
+            <div>
+              <Label>نمط التشغيل</Label>
+              <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="byAyah" id="byAyah" />
+                  <Label htmlFor="byAyah" className="font-normal">كل آية منفردة</Label>
+                </div>
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="bySelection" id="bySelection" />
+                  <Label htmlFor="bySelection" className="font-normal">قراءة المقطع كاملاً</Label>
+                </div>
+              </RadioGroup>
             </div>
             
             <div className="space-y-2">
@@ -378,7 +407,7 @@ export function MemorizeView() {
           </div>
           {playlist.length > 0 && currentTrackIndex < playlist.length &&
             <div className="text-center text-sm text-muted-foreground mt-2">
-                {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''} (${(currentTrackIndex % (repetitions || 1)) + 1}/${repetitions})`}
+                {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''}`}
             </div>
           }
         </div>
@@ -386,5 +415,3 @@ export function MemorizeView() {
     </div>
   );
 }
-
-    

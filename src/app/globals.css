@@ -2,37 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Islamic Quran App Design System */
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 224 71% 4%;
-    --card: 210 20% 94%;
-    --card-foreground: 224 71% 4%;
-    --popover: 210 20% 94%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 204 70% 53%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 210 20% 92%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 210 20% 92%;
-    --muted-foreground: 224 71% 25%;
-    --accent: 140 50% 55%;
-    --accent-foreground: 224 71% 4%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 204 70% 53%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.8rem;
+    /* Islamic Color Palette */
+    --background: 42 100% 98%;
+    --foreground: 220 13% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    /* Islamic Green as Primary */
+    --primary: 146 64% 25%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 146 64% 35%;
+
+    /* Warm Gold as Secondary */
+    --secondary: 45 100% 85%;
+    --secondary-foreground: 220 13% 18%;
+
+    --muted: 45 20% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Subtle Blue as Accent */
+    --accent: 210 40% 92%;
+    --accent-foreground: 220 13% 18%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 45 20% 90%;
+    --input: 45 20% 94%;
+    --ring: 146 64% 25%;
+
+    /* Islamic Design Elements */
+    --golden: 45 100% 60%;
+    --golden-light: 45 100% 75%;
+    --islamic-green: 146 64% 25%;
+    --islamic-green-light: 146 64% 35%;
+    --reading-highlight: 45 100% 85%;
+    --verse-bg: 146 20% 97%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--islamic-green)), hsl(var(--islamic-green-light)));
+    --gradient-golden: linear-gradient(135deg, hsl(var(--golden)), hsl(var(--golden-light)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(var(--islamic-green) / 0.1);
+    --shadow-medium: 0 4px 16px -4px hsl(var(--islamic-green) / 0.15);
+    --shadow-strong: 0 8px 32px -8px hsl(var(--islamic-green) / 0.2);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -42,31 +72,46 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
-    --background: 224 71% 10%;
-    --foreground: 210 20% 98%;
-    --card: 224 71% 14%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71% 14%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 204 70% 53%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 224 71% 18%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 224 71% 18%;
-    --muted-foreground: 210 20% 75%;
-    --accent: 140 50% 55%;
-    --accent-foreground: 224 71% 4%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 224 71% 18%;
-    --input: 224 71% 18%;
-    --ring: 204 70% 53%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Dark Islamic Theme */
+    --background: 220 13% 9%;
+    --foreground: 45 20% 95%;
+
+    --card: 220 13% 12%;
+    --card-foreground: 45 20% 95%;
+
+    --popover: 220 13% 12%;
+    --popover-foreground: 45 20% 95%;
+
+    --primary: 146 64% 40%;
+    --primary-foreground: 220 13% 9%;
+    --primary-glow: 146 64% 50%;
+
+    --secondary: 220 13% 15%;
+    --secondary-foreground: 45 20% 95%;
+
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 65%;
+
+    --accent: 220 13% 15%;
+    --accent-foreground: 45 20% 95%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 13% 9%;
+
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 146 64% 40%;
+
+    /* Dark Islamic Elements */
+    --golden: 45 100% 70%;
+    --golden-light: 45 100% 80%;
+    --islamic-green: 146 64% 40%;
+    --islamic-green-light: 146 64% 50%;
+    --reading-highlight: 45 60% 25%;
+    --verse-bg: 220 13% 12%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
