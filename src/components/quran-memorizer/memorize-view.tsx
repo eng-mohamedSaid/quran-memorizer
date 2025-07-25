@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { getSurahs, getAudioEditions, getAyahsForSurah, getTranslationForSurah, getAudioForAyah } from "@/lib/api";
@@ -307,13 +308,13 @@ export function MemorizeView() {
       <audio ref={audioRef} onEnded={handleAudioEnded} />
       <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
         <CardHeader><CardTitle>الإعدادات</CardTitle></CardHeader>
-        <CardContent className="flex-grow overflow-y-auto">
+        <CardContent className="flex-grow overflow-y-auto text-right">
           <div className="space-y-6">
             <div>
               <Label htmlFor="surah">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select value={String(surah)} onValueChange={handleSurahChange}>
-                <SelectTrigger id="surah"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="surah" className="text-right"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {surahs.map(s => <SelectItem key={s.number} value={String(s.number)}>{s.number}. {s.name} ({s.englishName})</SelectItem>)}
                 </SelectContent>
@@ -338,13 +339,13 @@ export function MemorizeView() {
             <div>
               <Label>نمط التشغيل</Label>
               <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <RadioGroupItem value="byAyah" id="byAyah" />
+                <div className="flex items-center justify-end space-x-2 space-x-reverse">
                   <Label htmlFor="byAyah" className="font-normal">كل آية منفردة</Label>
+                  <RadioGroupItem value="byAyah" id="byAyah" />
                 </div>
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <RadioGroupItem value="bySelection" id="bySelection" />
+                <div className="flex items-center justify-end space-x-2 space-x-reverse">
                   <Label htmlFor="bySelection" className="font-normal">قراءة المقطع كاملاً</Label>
+                  <RadioGroupItem value="bySelection" id="bySelection" />
                 </div>
               </RadioGroup>
             </div>
@@ -357,12 +358,12 @@ export function MemorizeView() {
                             const reciter = audioEditions.find(e => e.identifier === reciterId);
                             return (
                                 <div key={reciterId} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                                    <span className="truncate flex-1 text-start">{reciter?.name || reciterId}</span>
                                     <div className="flex items-center gap-1 flex-shrink-0">
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveReciter(index, 'up')} disabled={index===0}><ChevronUp className="h-4 w-4"/></Button>
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveReciter(index, 'down')} disabled={index === selectedReciters.length-1}><ChevronDown className="h-4 w-4"/></Button>
                                         <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeReciter(reciterId)}><Trash2 className="h-4 w-4"/></Button>
                                     </div>
+                                    <span className="truncate flex-1 text-right">{reciter?.name || reciterId}</span>
                                 </div>
                             );
                         })}
@@ -374,7 +375,7 @@ export function MemorizeView() {
               <Label>إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select onValueChange={addReciter} value="">
-                <SelectTrigger id="reciters"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
+                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
                 <SelectContent>
                   {audioEditions
                     .filter(e => !selectedReciters.includes(e.identifier))
@@ -401,7 +402,7 @@ export function MemorizeView() {
       <div className="flex-grow h-full flex flex-col">
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
-            <div className="p-6 text-2xl/loose leading-loose font-serif text-start">
+            <div className="p-6 text-2xl/loose leading-loose font-serif text-right">
               {ayahsData.length > 0 ? displayedAyahs
                 .map(ayah => {
                   const currentTrack = playlist[currentTrackIndex];
@@ -414,7 +415,7 @@ export function MemorizeView() {
                           <span className="text-primary font-bold">﴾</span>
                           <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
                       </span>
-                      <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2">{ayah.englishText}</p>
+                      <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-left">{ayah.englishText}</p>
                        <Dialog>
                         <DialogTrigger asChild>
                            <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
@@ -458,3 +459,5 @@ export function MemorizeView() {
     </div>
   );
 }
+
+    
