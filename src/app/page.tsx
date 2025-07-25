@@ -67,16 +67,12 @@ export default function LandingPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative w-full pt-24 pb-32 md:pt-32 md:pb-40 text-center">
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
-            <Image
-                src="https://placehold.co/1920x1080.png"
-                data-ai-hint="kaaba mecca"
-                layout="fill"
-                objectFit="cover"
-                alt="Holy Kaaba"
-                className="opacity-20"
+        <section className="relative w-full pt-24 pb-32 md:pt-32 md:pb-40 text-center overflow-hidden">
+            <div 
+                className="absolute top-0 left-0 w-full h-full bg-cover bg-center opacity-10"
+                style={{backgroundImage: "url('/islamic-pattern.svg')"}}
             />
+            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
             <div className="container px-4 md:px-6 relative z-20">
                 <div className="flex flex-col items-center space-y-6">
                     <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-headline text-primary">

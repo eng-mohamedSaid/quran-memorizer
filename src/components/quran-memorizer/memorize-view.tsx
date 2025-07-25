@@ -78,11 +78,15 @@ export function MemorizeView() {
     setIsClient(true);
   }, []);
   
-  useEffect(() => {
+  const applyPlaybackRate = useCallback(() => {
     if (audioRef.current && isFinite(playbackRate)) {
-        audioRef.current.playbackRate = playbackRate;
+      audioRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
+
+  useEffect(() => {
+    applyPlaybackRate();
+  }, [playbackRate, applyPlaybackRate]);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -176,6 +180,7 @@ export function MemorizeView() {
         const audioData = await getAudioForAyah(track.surah, track.ayah, track.reciterId);
         if (audioData?.audio && audioRef.current) {
           audioRef.current.src = audioData.audio;
+          applyPlaybackRate(); // Ensure speed is set for new track
           if(isPlaying) {
              await audioRef.current.play().catch(e => {
                 console.error("Audio play failed:", e);
@@ -196,7 +201,7 @@ export function MemorizeView() {
     } else if (!isPlaying) {
       audioRef.current?.pause();
     }
-  }, [isPlaying, currentTrackIndex, playlist, playNext]);
+  }, [isPlaying, currentTrackIndex, playlist, playNext, applyPlaybackRate]);
   
   const handleAudioEnded = useCallback(() => {
     playNext();
