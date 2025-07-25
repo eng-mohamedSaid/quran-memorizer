@@ -59,6 +59,16 @@ export function MemorizeView() {
   const [tafsir, setTafsir] = useState<{ [key: string]: string }>({});
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
 
+  const loadAyahs = useCallback(async (surahNumber: number) => {
+    const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
+    const combined = ayahsRes.map(ayah => ({
+        numberInSurah: ayah.numberInSurah,
+        arabicText: ayah.text,
+        englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
+    }));
+    setAyahsData(combined);
+  }, []);
+
   useEffect(() => {
     async function loadInitialData() {
       setIsLoading(true);
@@ -70,17 +80,7 @@ export function MemorizeView() {
     }
     loadInitialData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadAyahs = useCallback(async (surahNumber: number) => {
-    const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
-    const combined = ayahsRes.map(ayah => ({
-        numberInSurah: ayah.numberInSurah,
-        arabicText: ayah.text,
-        englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
-    }));
-    setAyahsData(combined);
-  }, []);
+  }, [loadAyahs]);
   
   useEffect(() => {
     if (settings.surah) {
