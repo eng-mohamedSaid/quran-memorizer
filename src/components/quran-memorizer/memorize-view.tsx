@@ -78,25 +78,26 @@ export function MemorizeView() {
     loadInitialData();
   }, []);
 
+  const loadAyahs = useCallback(async (surahNumber: number) => {
+    try {
+      const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
+      const combined = ayahsRes.map(ayah => ({
+          numberInSurah: ayah.numberInSurah,
+          arabicText: ayah.text,
+          englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
+      }));
+      setAyahsData(combined);
+    } catch (error) {
+      console.error("Failed to load ayahs", error);
+      toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل الآيات" });
+    }
+  }, []);
+
   useEffect(() => {
-    const loadAyahs = async (surahNumber: number) => {
-      try {
-        const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
-        const combined = ayahsRes.map(ayah => ({
-            numberInSurah: ayah.numberInSurah,
-            arabicText: ayah.text,
-            englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
-        }));
-        setAyahsData(combined);
-      } catch (error) {
-        console.error("Failed to load ayahs", error);
-        toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل الآيات" });
-      }
-    };
     if (surah) {
         loadAyahs(surah);
     }
-  }, [surah]);
+  }, [surah, loadAyahs]);
   
   useEffect(() => {
     const newPlaylist: PlaylistItem[] = [];
@@ -138,7 +139,14 @@ export function MemorizeView() {
         const audioData = await getAudioForAyah(track.surah, track.ayah, track.reciterId);
         if (audioData?.audio && audioRef.current) {
           audioRef.current.src = audioData.audio;
-          await audioRef.current.play();
+          // Check if component is still in a playing state before trying to play
+          if(isPlaying) {
+             await audioRef.current.play().catch(e => {
+                // Autoplay was prevented.
+                console.error("Audio play failed:", e);
+                setIsPlaying(false);
+             });
+          }
         } else {
           playNext();
         }
@@ -148,9 +156,9 @@ export function MemorizeView() {
       }
     };
 
-    if (isPlaying && playlist.length > 0) {
+    if (isPlaying && playlist.length > 0 && currentTrackIndex < playlist.length) {
       playTrack(currentTrackIndex);
-    } else {
+    } else if (!isPlaying) {
       audioRef.current?.pause();
     }
   }, [isPlaying, currentTrackIndex, playlist, playNext]);
@@ -219,6 +227,23 @@ export function MemorizeView() {
     }
   }, [selectedReciters, handleSettingsChange]);
 
+  const handleSurahChange = useCallback((val: string) => {
+      const newSurahNum = Number(val);
+      const newSurah = surahs.find(s => s.number === newSurahNum);
+      if (newSurah) {
+        setSettings(prev => ({
+          ...prev,
+          surah: newSurahNum, 
+          fromAyah: 1, 
+          toAyah: newSurah.numberOfAyahs
+        }));
+      }
+  }, [surahs, setSettings]);
+
+  const displayedAyahs = useMemo(() => {
+    return ayahsData.filter(a => a.numberInSurah >= fromAyah && a.numberInSurah <= toAyah);
+  }, [ayahsData, fromAyah, toAyah]);
+
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
       <audio ref={audioRef} onEnded={handleAudioEnded} />
@@ -229,16 +254,7 @@ export function MemorizeView() {
             <div>
               <Label htmlFor="surah">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
-              <Select value={String(surah)} onValueChange={val => {
-                  const newSurahNum = Number(val);
-                  const newSurah = surahs.find(s => s.number === newSurahNum);
-                  setSettings(prev => ({
-                    ...prev,
-                    surah: newSurahNum, 
-                    fromAyah: 1, 
-                    toAyah: newSurah?.numberOfAyahs || 1 
-                  }));
-              }}>
+              <Select value={String(surah)} onValueChange={handleSurahChange}>
                 <SelectTrigger id="surah"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {surahs.map(s => <SelectItem key={s.number} value={String(s.number)}>{s.number}. {s.name} ({s.englishName})</SelectItem>)}
@@ -249,16 +265,16 @@ export function MemorizeView() {
             <div className="flex gap-4">
               <div>
                 <Label htmlFor="fromAyah">من آية</Label>
-                <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Number(e.target.value))} />
+                <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Math.max(1, Number(e.target.value)))} />
               </div>
               <div>
                 <Label htmlFor="toAyah">إلى آية</Label>
-                <Input id="toAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Number(e.target.value))} />
+                <Input id="toAyah" type="number" min={fromAyah} max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Math.min(selectedSurah?.numberOfAyahs || 1, Number(e.target.value)))} />
               </div>
             </div>
             <div>
               <Label htmlFor="repetitions">التكرار لكل قارئ</Label>
-              <Input id="repetitions" type="number" min="1" value={repetitions} onChange={e => handleSettingsChange('repetitions', Number(e.target.value))} />
+              <Input id="repetitions" type="number" min="1" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(1, Number(e.target.value)))} />
             </div>
             
             <div className="space-y-2">
@@ -283,9 +299,9 @@ export function MemorizeView() {
             </div>
 
             <div>
-              <Label htmlFor="reciters">إضافة قارئ</Label>
+              <Label>إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
-              <Select onValueChange={addReciter}>
+              <Select onValueChange={addReciter} value="">
                 <SelectTrigger id="reciters"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
                 <SelectContent>
                   {audioEditions
@@ -314,8 +330,7 @@ export function MemorizeView() {
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
             <div className="p-6 text-2xl/loose leading-loose font-serif">
-              {ayahsData.length > 0 ? ayahsData
-                .filter(a => a.numberInSurah >= fromAyah && a.numberInSurah <= toAyah)
+              {ayahsData.length > 0 ? displayedAyahs
                 .map(ayah => {
                   const currentTrack = playlist[currentTrackIndex];
                   const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
@@ -353,10 +368,10 @@ export function MemorizeView() {
         <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
           <div className="flex items-center justify-center gap-4">
             <Button variant="ghost" size="icon" onClick={handlePrev} disabled={currentTrackIndex === 0}><SkipBack /></Button>
-            <Button variant="default" size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
+            <Button variant="default" size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause} disabled={playlist.length === 0}>
                 {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentTrackIndex === playlist.length-1 && !loop}><SkipForward /></Button>
+            <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentTrackIndex >= playlist.length-1 && !loop}><SkipForward /></Button>
             <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('loop', !loop)}>
                 {loop ? <Repeat1 className="text-primary" /> : <Repeat />}
             </Button>
@@ -371,3 +386,4 @@ export function MemorizeView() {
     </div>
   );
 }
+
