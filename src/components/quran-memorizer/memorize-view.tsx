@@ -230,7 +230,7 @@ export function MemorizeView() {
     }
   }, [currentTrackIndex, autoScroll, playlist]);
   
-  const handleSettingsChange = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
+  const handleSettingsChange = useCallback((key: keyof Settings, value: any) => {
       setSettings(prev => ({...prev, [key]: value}));
   }, [setSettings]);
   
@@ -317,10 +317,10 @@ export function MemorizeView() {
         <CardContent className="flex-grow overflow-y-auto">
           <div className="space-y-6 text-right">
             <div>
-              <Label htmlFor="surah" className="text-start w-full block text-right">السورة</Label>
+              <Label htmlFor="surah" className="text-right w-full block mb-2">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select value={String(surah)} onValueChange={handleSurahChange}>
-                <SelectTrigger id="surah" className="text-right"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="surah"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {surahs.map(s => <SelectItem key={s.number} value={String(s.number)}>{s.number}. {s.name} ({s.englishName})</SelectItem>)}
                 </SelectContent>
@@ -329,21 +329,21 @@ export function MemorizeView() {
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label htmlFor="fromAyah" className="text-start w-full block text-right">من آية</Label>
+                <Label htmlFor="fromAyah" className="text-right w-full block mb-2">من آية</Label>
                 <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Math.max(1, Number(e.target.value)))} />
               </div>
               <div className="flex-1">
-                <Label htmlFor="toAyah" className="text-start w-full block text-right">إلى آية</Label>
+                <Label htmlFor="toAyah" className="text-right w-full block mb-2">إلى آية</Label>
                 <Input id="toAyah" type="number" min={fromAyah} max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Math.min(selectedSurah?.numberOfAyahs || 1, Number(e.target.value)))} />
               </div>
             </div>
             <div>
-              <Label htmlFor="repetitions" className="text-start w-full block text-right">تكرار الآية</Label>
+              <Label htmlFor="repetitions" className="text-right w-full block mb-2">تكرار الآية</Label>
               <Input id="repetitions" type="number" min="0" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(0, Number(e.target.value)))} />
             </div>
 
             <div>
-              <Label className="text-start w-full block text-right">نمط التشغيل</Label>
+              <Label className="text-right w-full block mb-2">نمط التشغيل</Label>
               <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
                 <div className="flex items-center justify-end gap-2">
                   <Label htmlFor="byAyah" className="font-normal">كل آية منفردة</Label>
@@ -357,7 +357,7 @@ export function MemorizeView() {
             </div>
             
             <div className="space-y-2">
-                <Label className="text-start w-full block text-right">القراء المختارون</Label>
+                <Label className="text-right w-full block mb-2">القراء المختارون</Label>
                  <ScrollArea className="h-40 border rounded-md p-2">
                     <div className="space-y-2">
                         {selectedReciters.map((reciterId, index) => {
@@ -378,10 +378,10 @@ export function MemorizeView() {
             </div>
 
             <div>
-              <Label className="text-start w-full block text-right">إضافة قارئ</Label>
+              <Label className="text-right w-full block mb-2">إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select onValueChange={addReciter} value="">
-                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
+                <SelectTrigger id="reciters"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
                 <SelectContent>
                   {audioEditions
                     .filter(e => !selectedReciters.includes(e.identifier))
@@ -394,18 +394,18 @@ export function MemorizeView() {
             <Separator />
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="show-ayahs" className="flex items-center gap-2">
+              <Label htmlFor="show-ayahs" className="flex items-center gap-2 cursor-pointer">
                 {showAyahs ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 إظهار الآيات
               </Label>
               <Switch id="show-ayahs" checked={showAyahs} onCheckedChange={val => handleSettingsChange('showAyahs', val)} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="auto-scroll" className="text-right">التمرير التلقائي</Label>
+              <Label htmlFor="auto-scroll" className="cursor-pointer">التمرير التلقائي</Label>
               <Switch id="auto-scroll" checked={autoScroll} onCheckedChange={val => handleSettingsChange('autoScroll', val)} disabled={!showAyahs} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="loop" className="text-right">إعادة تشغيل المقطع</Label>
+              <Label htmlFor="loop" className="cursor-pointer">إعادة تشغيل المقطع</Label>
               <Switch id="loop" checked={loop} onCheckedChange={val => handleSettingsChange('loop', val)} />
             </div>
 
@@ -416,35 +416,37 @@ export function MemorizeView() {
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
             {showAyahs ? (
-                <div className="p-6 text-2xl/loose leading-loose font-serif text-right">
+                <div className="p-6 text-2xl/loose leading-loose font-serif">
                   {ayahsData.length > 0 ? displayedAyahs
                     .map(ayah => {
                       const currentTrack = playlist[currentTrackIndex];
                       const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
                       return (
-                        <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null} className="text-start">
-                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-start text-right ${isActive ? 'bg-primary/20' : ''}`}>
+                        <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
+                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-right w-full ${isActive ? 'bg-primary/20' : ''}`}>
                               <span className="text-primary font-bold">﴿</span>
                               {ayah.arabicText}
                               <span className="text-primary font-bold">﴾</span>
                               <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
                           </p>
-                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-right">{ayah.englishText}</p>
-                           <Dialog>
-                            <DialogTrigger asChild>
-                               <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle className="text-right">تفسير الآية {ayah.numberInSurah} من سورة {selectedSurah?.name}</DialogTitle>
-                              </DialogHeader>
-                              {isTafsirLoading ? <Skeleton className="h-20 w-full" /> : 
-                              <ScrollArea className="max-h-96">
-                                <p className="py-4 text-base/loose text-right">{tafsir[`${surah}:${ayah.numberInSurah}`] || "لا يتوفر تفسير حاليًا."}</p>
-                              </ScrollArea>
-                              }
-                            </DialogContent>
-                          </Dialog>
+                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-left">{ayah.englishText}</p>
+                           <div className="text-right">
+                             <Dialog>
+                              <DialogTrigger asChild>
+                                 <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="text-right">تفسير الآية {ayah.numberInSurah} من سورة {selectedSurah?.name}</DialogTitle>
+                                </DialogHeader>
+                                {isTafsirLoading ? <Skeleton className="h-20 w-full" /> : 
+                                <ScrollArea className="max-h-96">
+                                  <p className="py-4 text-base/loose text-right">{tafsir[`${surah}:${ayah.numberInSurah}`] || "لا يتوفر تفسير حاليًا."}</p>
+                                </ScrollArea>
+                                }
+                              </DialogContent>
+                            </Dialog>
+                           </div>
                           <Separator className="my-4"/>
                         </div>
                       );
