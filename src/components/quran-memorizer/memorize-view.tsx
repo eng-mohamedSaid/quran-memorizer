@@ -103,14 +103,17 @@ export function MemorizeView() {
   }, [settings.fromAyah, settings.toAyah, settings.selectedReciters, settings.repetitions, settings.surah]);
 
   const playNext = useCallback(() => {
-    if (currentTrackIndex < playlist.length - 1) {
-      setCurrentTrackIndex(currentTrackIndex + 1);
-    } else if (settings.loop) {
-      setCurrentTrackIndex(0);
-    } else {
+    setCurrentTrackIndex(prevIndex => {
+      if (prevIndex < playlist.length - 1) {
+        return prevIndex + 1;
+      }
+      if (settings.loop) {
+        return 0;
+      }
       setIsPlaying(false);
-    }
-  }, [currentTrackIndex, playlist.length, settings.loop]);
+      return prevIndex;
+    });
+  }, [playlist.length, settings.loop]);
   
   const playTrack = useCallback(async (index: number) => {
     if (!audioRef.current || index >= playlist.length) {
@@ -183,18 +186,18 @@ export function MemorizeView() {
     }
   }, [currentTrackIndex, settings.autoScroll, playlist]);
   
-  const moveReciter = (index: number, direction: 'up' | 'down') => {
+  const moveReciter = useCallback((index: number, direction: 'up' | 'down') => {
       const newReciters = [...settings.selectedReciters];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if(targetIndex >= 0 && targetIndex < newReciters.length){
         [newReciters[index], newReciters[targetIndex]] = [newReciters[targetIndex], newReciters[index]];
         setSettings({...settings, selectedReciters: newReciters});
       }
-  };
+  }, [settings, setSettings]);
   
-  const removeReciter = (reciterId: string) => {
+  const removeReciter = useCallback((reciterId: string) => {
       setSettings({...settings, selectedReciters: settings.selectedReciters.filter(id => id !== reciterId)})
-  };
+  }, [settings, setSettings]);
 
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
