@@ -42,6 +42,11 @@ export function MemorizeView() {
   const [audioEditions, setAudioEditions] = useState<AudioEdition[]>([]);
   const [ayahsData, setAyahsData] = useState<CombinedAyahData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const [settings, setSettings] = useLocalStorage<Settings>("quran-memorizer-settings", {
     surah: 1,
@@ -51,7 +56,7 @@ export function MemorizeView() {
     selectedReciters: ["ar.alafasy"],
     autoScroll: true,
     loop: false,
-    playbackMode: 'byAyah',
+    playbackMode: 'bySelection',
   });
   
   const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode } = settings;
@@ -259,6 +264,44 @@ export function MemorizeView() {
     return ayahsData.filter(a => a.numberInSurah >= fromAyah && a.numberInSurah <= toAyah);
   }, [ayahsData, fromAyah, toAyah]);
 
+  if (!isClient) {
+    return (
+        <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
+            <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
+                <CardHeader><CardTitle>الإعدادات</CardTitle></CardHeader>
+                <CardContent className="flex-grow overflow-y-auto">
+                    <div className="space-y-6">
+                        <Skeleton className="h-10 w-full" />
+                        <div className="flex gap-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-40 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Separator />
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+             <div className="flex-grow h-full flex flex-col">
+                <Card className="flex-grow">
+                    <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
+                         <div className="p-6">
+                            <Skeleton className="h-40 w-full" />
+                         </div>
+                    </ScrollArea>
+                </Card>
+                 <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
+                    <Skeleton className="h-16 w-full" />
+                 </div>
+             </div>
+        </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
       <audio ref={audioRef} onEnded={handleAudioEnded} />
@@ -314,7 +357,7 @@ export function MemorizeView() {
                             const reciter = audioEditions.find(e => e.identifier === reciterId);
                             return (
                                 <div key={reciterId} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                                    <span className="truncate flex-1">{reciter?.name || reciterId}</span>
+                                    <span className="truncate flex-1 text-start">{reciter?.name || reciterId}</span>
                                     <div className="flex items-center gap-1 flex-shrink-0">
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveReciter(index, 'up')} disabled={index===0}><ChevronUp className="h-4 w-4"/></Button>
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveReciter(index, 'down')} disabled={index === selectedReciters.length-1}><ChevronDown className="h-4 w-4"/></Button>
@@ -358,7 +401,7 @@ export function MemorizeView() {
       <div className="flex-grow h-full flex flex-col">
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
-            <div className="p-6 text-2xl/loose leading-loose font-serif">
+            <div className="p-6 text-2xl/loose leading-loose font-serif text-start">
               {ayahsData.length > 0 ? displayedAyahs
                 .map(ayah => {
                   const currentTrack = playlist[currentTrackIndex];

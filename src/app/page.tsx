@@ -15,13 +15,13 @@ export default function LandingPage() {
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline text-start">
                     احفظ القرآن بصوت الشيوخ الذين تحبهم
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl text-start">
                     تجربة فريدة ومحفزة لحفظ ومراجعة القرآن الكريم عبر الاستماع، مع أدوات تساعدك على التركيز والمتابعة.
                   </p>
-                  <p className="max-w-[600px] text-muted-foreground pt-2 text-sm">
+                  <p className="max-w-[600px] text-muted-foreground pt-2 text-sm text-start">
                     قال رسول الله صلى الله عليه وسلم: "خيركم من تعلم القرآن وعلمه". وقال: "يقال لصاحب القرآن: اقرأ وارتق ورتل كما كنت ترتل في الدنيا، فإن منزلتك عند آخر آية تقرأ بها".
                   </p>
                 </div>
@@ -44,7 +44,7 @@ export default function LandingPage() {
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="flex flex-col items-center justify-center space-y-4 text-start">
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">أهم المميزات</div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">أدوات مصممة لإتقان الحفظ</h2>
@@ -92,7 +92,7 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="flex items-center justify-center h-14 border-t">
-        <p className="text-sm text-muted-foreground">&copy; 2024 محفّظ القرآن. كل الحقوق محفوظة.</p>
+        <p className="text-sm text-muted-foreground text-start">&copy; 2024 محفّظ القرآن. كل الحقوق محفوظة.</p>
       </footer>
     </div>
   );
