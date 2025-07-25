@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Quran Memorizer',
-  description: 'Memorize the Quran with the voices of the reciters you love.',
+  title: 'صاحب القرآن - Quran Companion',
+  description: 'تجربة فريدة ومُلهمة لحفظ ومراجعة القرآن الكريم عبر الاستماع.',
 };
 
 export default function RootLayout({
