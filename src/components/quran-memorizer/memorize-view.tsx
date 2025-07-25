@@ -44,7 +44,6 @@ export function MemorizeView() {
   const [audioEditions, setAudioEditions] = useState<AudioEdition[]>([]);
   const [ayahsData, setAyahsData] = useState<CombinedAyahData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
 
   const [settings, setSettings] = useLocalStorage<Settings>("quran-memorizer-settings", {
     surah: 1,
@@ -69,10 +68,12 @@ export function MemorizeView() {
   
   const [tafsir, setTafsir] = useState<{ [key: string]: string }>({});
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
-  
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
 
   useEffect(() => {
     async function loadInitialData() {
@@ -272,39 +273,39 @@ export function MemorizeView() {
 
   if (!isClient) {
     return (
-        <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
-            <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
-                <CardHeader><CardTitle>الإعدادات</CardTitle></CardHeader>
-                <CardContent className="flex-grow overflow-y-auto">
-                    <div className="space-y-6">
-                        <Skeleton className="h-10 w-full" />
-                        <div className="flex gap-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-20 w-full" />
-                        <Skeleton className="h-40 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Separator />
-                        <Skeleton className="h-6 w-full" />
-                        <Skeleton className="h-6 w-full" />
-                    </div>
-                </CardContent>
-            </Card>
-             <div className="flex-grow h-full flex flex-col">
-                <Card className="flex-grow">
-                    <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
-                         <div className="p-6">
-                            <Skeleton className="h-40 w-full" />
-                         </div>
-                    </ScrollArea>
-                </Card>
-                 <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
-                    <Skeleton className="h-16 w-full" />
-                 </div>
-             </div>
-        </div>
+      <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
+          <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
+              <CardHeader><CardTitle>الإعدادات</CardTitle></CardHeader>
+              <CardContent className="flex-grow overflow-y-auto">
+                  <div className="space-y-6">
+                      <Skeleton className="h-10 w-full" />
+                      <div className="flex gap-4">
+                          <Skeleton className="h-10 w-full" />
+                          <Skeleton className="h-10 w-full" />
+                      </div>
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-40 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Separator />
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-6 w-full" />
+                  </div>
+              </CardContent>
+          </Card>
+           <div className="flex-grow h-full flex flex-col">
+              <Card className="flex-grow">
+                  <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
+                       <div className="p-6">
+                          <Skeleton className="h-40 w-full" />
+                       </div>
+                  </ScrollArea>
+              </Card>
+               <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
+                  <Skeleton className="h-16 w-full" />
+               </div>
+           </div>
+      </div>
     );
   }
 
@@ -316,7 +317,7 @@ export function MemorizeView() {
         <CardContent className="flex-grow overflow-y-auto">
           <div className="space-y-6 text-right">
             <div>
-              <Label htmlFor="surah">السورة</Label>
+              <Label htmlFor="surah" className="text-start w-full block text-right">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select value={String(surah)} onValueChange={handleSurahChange}>
                 <SelectTrigger id="surah" className="text-right"><SelectValue /></SelectTrigger>
@@ -328,27 +329,27 @@ export function MemorizeView() {
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label htmlFor="fromAyah" className="text-start w-full block">من آية</Label>
+                <Label htmlFor="fromAyah" className="text-start w-full block text-right">من آية</Label>
                 <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Math.max(1, Number(e.target.value)))} />
               </div>
               <div className="flex-1">
-                <Label htmlFor="toAyah" className="text-start w-full block">إلى آية</Label>
+                <Label htmlFor="toAyah" className="text-start w-full block text-right">إلى آية</Label>
                 <Input id="toAyah" type="number" min={fromAyah} max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Math.min(selectedSurah?.numberOfAyahs || 1, Number(e.target.value)))} />
               </div>
             </div>
             <div>
-              <Label htmlFor="repetitions" className="text-start w-full block">تكرار الآية</Label>
+              <Label htmlFor="repetitions" className="text-start w-full block text-right">تكرار الآية</Label>
               <Input id="repetitions" type="number" min="0" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(0, Number(e.target.value)))} />
             </div>
 
             <div>
-              <Label className="text-start w-full block">نمط التشغيل</Label>
+              <Label className="text-start w-full block text-right">نمط التشغيل</Label>
               <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
-                <div className="flex items-center justify-end space-x-2 space-x-reverse">
+                <div className="flex items-center justify-end gap-2">
                   <Label htmlFor="byAyah" className="font-normal">كل آية منفردة</Label>
                   <RadioGroupItem value="byAyah" id="byAyah" />
                 </div>
-                <div className="flex items-center justify-end space-x-2 space-x-reverse">
+                <div className="flex items-center justify-end gap-2">
                   <Label htmlFor="bySelection" className="font-normal">قراءة المقطع كاملاً</Label>
                   <RadioGroupItem value="bySelection" id="bySelection" />
                 </div>
@@ -356,7 +357,7 @@ export function MemorizeView() {
             </div>
             
             <div className="space-y-2">
-                <Label className="text-start w-full block">القراء المختارون</Label>
+                <Label className="text-start w-full block text-right">القراء المختارون</Label>
                  <ScrollArea className="h-40 border rounded-md p-2">
                     <div className="space-y-2">
                         {selectedReciters.map((reciterId, index) => {
@@ -377,7 +378,7 @@ export function MemorizeView() {
             </div>
 
             <div>
-              <Label className="text-start w-full block">إضافة قارئ</Label>
+              <Label className="text-start w-full block text-right">إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select onValueChange={addReciter} value="">
                 <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
@@ -400,11 +401,11 @@ export function MemorizeView() {
               <Switch id="show-ayahs" checked={showAyahs} onCheckedChange={val => handleSettingsChange('showAyahs', val)} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="auto-scroll">التمرير التلقائي</Label>
+              <Label htmlFor="auto-scroll" className="text-right">التمرير التلقائي</Label>
               <Switch id="auto-scroll" checked={autoScroll} onCheckedChange={val => handleSettingsChange('autoScroll', val)} disabled={!showAyahs} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="loop">إعادة تشغيل المقطع</Label>
+              <Label htmlFor="loop" className="text-right">إعادة تشغيل المقطع</Label>
               <Switch id="loop" checked={loop} onCheckedChange={val => handleSettingsChange('loop', val)} />
             </div>
 
@@ -422,13 +423,13 @@ export function MemorizeView() {
                       const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
                       return (
                         <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null} className="text-start">
-                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-start ${isActive ? 'bg-primary/20' : ''}`}>
+                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-start text-right ${isActive ? 'bg-primary/20' : ''}`}>
                               <span className="text-primary font-bold">﴿</span>
                               {ayah.arabicText}
                               <span className="text-primary font-bold">﴾</span>
                               <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
                           </p>
-                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2">{ayah.englishText}</p>
+                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-right">{ayah.englishText}</p>
                            <Dialog>
                             <DialogTrigger asChild>
                                <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
@@ -479,5 +480,3 @@ export function MemorizeView() {
     </div>
   );
 }
-
-    
