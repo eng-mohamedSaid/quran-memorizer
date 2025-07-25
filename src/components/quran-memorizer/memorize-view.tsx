@@ -313,9 +313,9 @@ export function MemorizeView() {
       <audio ref={audioRef} onEnded={handleAudioEnded} />
       <Card className="w-full lg:w-1/3 lg:max-w-sm flex-shrink-0 h-full flex flex-col">
         <CardHeader><CardTitle className="text-right">الإعدادات</CardTitle></CardHeader>
-        <CardContent className="flex-grow overflow-y-auto text-right">
-          <div className="space-y-6">
-            <div className="text-right">
+        <CardContent className="flex-grow overflow-y-auto">
+          <div className="space-y-6 text-right">
+            <div>
               <Label htmlFor="surah">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select value={String(surah)} onValueChange={handleSurahChange}>
@@ -326,23 +326,23 @@ export function MemorizeView() {
               </Select>
               }
             </div>
-            <div className="flex gap-4 text-right">
+            <div className="flex gap-4">
               <div className="flex-1">
-                <Label htmlFor="fromAyah">من آية</Label>
+                <Label htmlFor="fromAyah" className="text-start w-full block">من آية</Label>
                 <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={fromAyah} onChange={e => handleSettingsChange('fromAyah', Math.max(1, Number(e.target.value)))} />
               </div>
               <div className="flex-1">
-                <Label htmlFor="toAyah">إلى آية</Label>
+                <Label htmlFor="toAyah" className="text-start w-full block">إلى آية</Label>
                 <Input id="toAyah" type="number" min={fromAyah} max={selectedSurah?.numberOfAyahs} value={toAyah} onChange={e => handleSettingsChange('toAyah', Math.min(selectedSurah?.numberOfAyahs || 1, Number(e.target.value)))} />
               </div>
             </div>
-            <div className="text-right">
-              <Label htmlFor="repetitions">تكرار الآية</Label>
+            <div>
+              <Label htmlFor="repetitions" className="text-start w-full block">تكرار الآية</Label>
               <Input id="repetitions" type="number" min="0" value={repetitions} onChange={e => handleSettingsChange('repetitions', Math.max(0, Number(e.target.value)))} />
             </div>
 
-            <div className="text-right">
-              <Label>نمط التشغيل</Label>
+            <div>
+              <Label className="text-start w-full block">نمط التشغيل</Label>
               <RadioGroup value={playbackMode} onValueChange={(value) => handleSettingsChange('playbackMode', value as PlaybackMode)} className="mt-2 space-y-2">
                 <div className="flex items-center justify-end space-x-2 space-x-reverse">
                   <Label htmlFor="byAyah" className="font-normal">كل آية منفردة</Label>
@@ -355,8 +355,8 @@ export function MemorizeView() {
               </RadioGroup>
             </div>
             
-            <div className="space-y-2 text-right">
-                <Label>القراء المختارون</Label>
+            <div className="space-y-2">
+                <Label className="text-start w-full block">القراء المختارون</Label>
                  <ScrollArea className="h-40 border rounded-md p-2">
                     <div className="space-y-2">
                         {selectedReciters.map((reciterId, index) => {
@@ -376,11 +376,11 @@ export function MemorizeView() {
                 </ScrollArea>
             </div>
 
-            <div className="text-right">
-              <Label>إضافة قارئ</Label>
+            <div>
+              <Label className="text-start w-full block">إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
               <Select onValueChange={addReciter} value="">
-                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectValue>
+                <SelectTrigger id="reciters" className="text-right"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
                 <SelectContent>
                   {audioEditions
                     .filter(e => !selectedReciters.includes(e.identifier))
@@ -421,14 +421,14 @@ export function MemorizeView() {
                       const currentTrack = playlist[currentTrackIndex];
                       const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
                       return (
-                        <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
-                          <span className={`inline-block p-2 rounded-md transition-colors duration-300 ${isActive ? 'bg-primary/20' : ''}`}>
+                        <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null} className="text-start">
+                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-start ${isActive ? 'bg-primary/20' : ''}`}>
                               <span className="text-primary font-bold">﴿</span>
                               {ayah.arabicText}
                               <span className="text-primary font-bold">﴾</span>
                               <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 me-2 font-sans">{ayah.numberInSurah}</span>
-                          </span>
-                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2 text-start">{ayah.englishText}</p>
+                          </p>
+                          <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 ps-2">{ayah.englishText}</p>
                            <Dialog>
                             <DialogTrigger asChild>
                                <Button variant="ghost" size="sm" onClick={() => handleShowTafsir(ayah.numberInSurah)}><BookOpen className="w-4 h-4 me-2"/> تفسير</Button>
@@ -479,3 +479,5 @@ export function MemorizeView() {
     </div>
   );
 }
+
+    
