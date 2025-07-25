@@ -1,28 +1,27 @@
 "use client"
 import { useState, useEffect, useCallback } from 'react';
 
-// Function to safely get value from localStorage
-const getStoredValue = <T>(key: string, initialValue: T): T => {
-  if (typeof window === 'undefined') {
-    return initialValue;
-  }
-  try {
-    const item = window.localStorage.getItem(key);
-    return item ? JSON.parse(item) : initialValue;
-  } catch (error) {
-    console.error(`Error reading localStorage key “${key}”:`, error);
-    return initialValue;
-  }
-};
-
-
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
-  // Initialize state directly from localStorage if available
-  const [storedValue, setStoredValue] = useState<T>(() => getStoredValue(key, initialValue));
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+
+  useEffect(() => {
+    // This effect runs only on the client, after the initial render.
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        setStoredValue(JSON.parse(item));
+      } else {
+        // If no value in localStorage, set it with the initial value
+        window.localStorage.setItem(key, JSON.stringify(initialValue));
+      }
+    } catch (error) {
+      console.error(`Error reading localStorage key “${key}”:`, error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
-      // Allow value to be a function so we have the same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       if (typeof window !== 'undefined') {
@@ -33,11 +32,14 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
     }
   }, [key, storedValue]);
   
-  // This effect will sync the state if the localStorage is changed in another tab.
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === key && event.newValue) {
-        setStoredValue(JSON.parse(event.newValue));
+        try {
+          setStoredValue(JSON.parse(event.newValue));
+        } catch (error) {
+           console.error(`Error parsing localStorage key “${key}” on storage event:`, error);
+        }
       }
     };
     window.addEventListener('storage', handleStorageChange);
