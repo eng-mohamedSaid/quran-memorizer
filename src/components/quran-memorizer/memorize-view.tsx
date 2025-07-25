@@ -16,8 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTafsir } from "@/ai/flows/get-tafsir";
 import { toast } from "@/hooks/use-toast";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, BookOpen, ChevronUp, ChevronDown, Trash2, Eye, EyeOff } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, BookOpen, ChevronUp, ChevronDown, Trash2, Eye, EyeOff, Gauge } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 type PlaybackMode = 'byAyah' | 'bySelection';
 
@@ -31,6 +33,7 @@ interface Settings {
   loop: boolean;
   playbackMode: PlaybackMode;
   showAyahs: boolean;
+  playbackRate: number;
 }
 
 interface PlaylistItem {
@@ -55,9 +58,10 @@ export function MemorizeView() {
     loop: false,
     playbackMode: 'bySelection',
     showAyahs: true,
+    playbackRate: 1,
   });
   
-  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode, showAyahs } = settings;
+  const { surah, fromAyah, toAyah, repetitions, selectedReciters, autoScroll, loop, playbackMode, showAyahs, playbackRate } = settings;
 
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -74,6 +78,11 @@ export function MemorizeView() {
     setIsClient(true);
   }, []);
   
+  useEffect(() => {
+    if (audioRef.current) {
+        audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -460,19 +469,39 @@ export function MemorizeView() {
           </ScrollArea>
         </Card>
         <div className="flex-shrink-0 p-4 border-t bg-background/80 backdrop-blur-sm rounded-b-lg">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('loop', !loop)}>
+                {loop ? <Repeat1 className="text-primary" /> : <Repeat />}
+            </Button>
             <Button variant="ghost" size="icon" onClick={handlePrev} disabled={currentTrackIndex === 0}><SkipBack /></Button>
             <Button variant="default" size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause} disabled={playlist.length === 0}>
                 {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
             </Button>
             <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentTrackIndex >= playlist.length-1 && !loop}><SkipForward /></Button>
-            <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('loop', !loop)}>
-                {loop ? <Repeat1 className="text-primary" /> : <Repeat />}
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Gauge />
+                  <span className="sr-only">Playback Speed</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuRadioGroup value={String(playbackRate)} onValueChange={(val) => handleSettingsChange('playbackRate', Number(val))}>
+                    <DropdownMenuRadioItem value="1">1x</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="1.25">1.25x</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           </div>
           {playlist.length > 0 && currentTrackIndex < playlist.length &&
             <div className="text-center text-sm text-muted-foreground mt-2">
-                {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''}`}
+                <span>{`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''}`}</span>
+                 <span className="mx-2">|</span>
+                <span>{`السرعة: ${playbackRate}x`}</span>
             </div>
           }
         </div>
@@ -480,3 +509,5 @@ export function MemorizeView() {
     </div>
   );
 }
+
+    
