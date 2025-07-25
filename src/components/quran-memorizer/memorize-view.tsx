@@ -59,34 +59,42 @@ export function MemorizeView() {
   const [tafsir, setTafsir] = useState<{ [key: string]: string }>({});
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
 
+  // Use a stable callback for loading ayahs
   const loadAyahs = useCallback(async (surahNumber: number) => {
-    const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
-    const combined = ayahsRes.map(ayah => ({
-        numberInSurah: ayah.numberInSurah,
-        arabicText: ayah.text,
-        englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
-    }));
-    setAyahsData(combined);
+    try {
+      const [ayahsRes, transRes] = await Promise.all([getAyahsForSurah(surahNumber), getTranslationForSurah(surahNumber)]);
+      const combined = ayahsRes.map(ayah => ({
+          numberInSurah: ayah.numberInSurah,
+          arabicText: ayah.text,
+          englishText: transRes.find(t => t.numberInSurah === ayah.numberInSurah)?.text || ""
+      }));
+      setAyahsData(combined);
+    } catch (error) {
+      console.error("Failed to load ayahs", error);
+      toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل الآيات" });
+    }
   }, []);
 
+  // Effect for initial data loading
   useEffect(() => {
     async function loadInitialData() {
       setIsLoading(true);
-      const [surahsRes, editionsRes] = await Promise.all([getSurahs(), getAudioEditions()]);
-      setSurahs(surahsRes);
-      setAudioEditions(editionsRes);
-      await loadAyahs(settings.surah);
-      setIsLoading(false);
+      try {
+        const [surahsRes, editionsRes] = await Promise.all([getSurahs(), getAudioEditions()]);
+        setSurahs(surahsRes);
+        setAudioEditions(editionsRes);
+        await loadAyahs(settings.surah);
+      } catch (error) {
+        console.error("Failed to load initial data", error);
+        toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل البيانات الأساسية" });
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadInitialData();
   }, [loadAyahs, settings.surah]);
   
-  useEffect(() => {
-    if (settings.surah) {
-        loadAyahs(settings.surah);
-    }
-  }, [settings.surah, loadAyahs]);
-  
+  // Effect to generate playlist when settings change
   useEffect(() => {
     const newPlaylist: PlaylistItem[] = [];
     if (settings.fromAyah <= settings.toAyah && settings.selectedReciters.length > 0) {
@@ -115,57 +123,55 @@ export function MemorizeView() {
     });
   }, [playlist.length, settings.loop]);
   
-  const playTrack = useCallback(async (index: number) => {
-    if (!audioRef.current || index >= playlist.length) {
-      setIsPlaying(false);
-      return;
-    }
-    
-    setIsPlaying(true);
-    const track = playlist[index];
-    try {
-      const audioData = await getAudioForAyah(track.surah, track.ayah, track.reciterId);
-      if (audioData?.audio && audioRef.current) {
-        audioRef.current.src = audioData.audio;
-        await audioRef.current.play();
-      } else {
-         // Skip to next track if audio is not found
+  // Effect for playing a track
+  useEffect(() => {
+    const playTrack = async (index: number) => {
+      if (!audioRef.current || index >= playlist.length) {
+        setIsPlaying(false);
+        return;
+      }
+      
+      const track = playlist[index];
+      try {
+        const audioData = await getAudioForAyah(track.surah, track.ayah, track.reciterId);
+        if (audioData?.audio && audioRef.current) {
+          audioRef.current.src = audioData.audio;
+          await audioRef.current.play();
+        } else {
+          playNext();
+        }
+      } catch (e) {
+        toast({ variant: "destructive", title: "خطأ", description: "لا يمكن تشغيل الملف الصوتي" });
         playNext();
       }
-    } catch (e) {
-      toast({ variant: "destructive", title: "خطأ", description: "ไม่สามารถเล่นไฟล์เสียงได้" });
-      playNext();
-    }
-  }, [playlist, playNext]);
+    };
 
-  useEffect(() => {
-    if(isPlaying) {
+    if (isPlaying) {
       playTrack(currentTrackIndex);
     } else {
       audioRef.current?.pause();
     }
-  }, [isPlaying, currentTrackIndex, playTrack]);
-
+  }, [isPlaying, currentTrackIndex, playlist, playNext]);
   
-  const handleAudioEnded = () => {
+  const handleAudioEnded = useCallback(() => {
     playNext();
-  };
+  }, [playNext]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    setIsPlaying(prev => !prev);
   };
   
-  const handleNext = () => playNext();
+  const handleNext = useCallback(() => {
+    playNext();
+  }, [playNext]);
 
-  const handlePrev = () => {
-    if (currentTrackIndex > 0) {
-      setCurrentTrackIndex(currentTrackIndex - 1);
-    }
-  };
+  const handlePrev = useCallback(() => {
+    setCurrentTrackIndex(prev => (prev > 0 ? prev - 1 : 0));
+  }, []);
 
   const selectedSurah = useMemo(() => surahs.find(s => s.number === settings.surah), [surahs, settings.surah]);
   
-  const handleShowTafsir = async (ayahNumber: number) => {
+  const handleShowTafsir = useCallback(async (ayahNumber: number) => {
     const key = `${settings.surah}:${ayahNumber}`;
     if (tafsir[key]) return;
 
@@ -178,26 +184,36 @@ export function MemorizeView() {
     } finally {
       setIsTafsirLoading(false);
     }
-  }
+  }, [settings.surah, tafsir]);
 
   useEffect(() => {
     if (settings.autoScroll && currentAyahRef.current) {
       currentAyahRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [currentTrackIndex, settings.autoScroll, playlist]);
+  }, [currentTrackIndex, settings.autoScroll]);
+  
+  const handleSettingsChange = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
+      setSettings(prev => ({...prev, [key]: value}));
+  }, [setSettings]);
   
   const moveReciter = useCallback((index: number, direction: 'up' | 'down') => {
       const newReciters = [...settings.selectedReciters];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if(targetIndex >= 0 && targetIndex < newReciters.length){
         [newReciters[index], newReciters[targetIndex]] = [newReciters[targetIndex], newReciters[index]];
-        setSettings({...settings, selectedReciters: newReciters});
+        handleSettingsChange('selectedReciters', newReciters);
       }
-  }, [settings, setSettings]);
+  }, [settings.selectedReciters, handleSettingsChange]);
   
   const removeReciter = useCallback((reciterId: string) => {
-      setSettings({...settings, selectedReciters: settings.selectedReciters.filter(id => id !== reciterId)})
-  }, [settings, setSettings]);
+      handleSettingsChange('selectedReciters', settings.selectedReciters.filter(id => id !== reciterId));
+  }, [settings.selectedReciters, handleSettingsChange]);
+
+  const addReciter = useCallback((reciterId: string) => {
+    if (!settings.selectedReciters.includes(reciterId)) {
+        handleSettingsChange('selectedReciters', [...settings.selectedReciters, reciterId]);
+    }
+  }, [settings.selectedReciters, handleSettingsChange]);
 
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-[calc(100vh-56px)]">
@@ -209,7 +225,16 @@ export function MemorizeView() {
             <div>
               <Label htmlFor="surah">السورة</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
-              <Select value={String(settings.surah)} onValueChange={val => setSettings({...settings, surah: Number(val), fromAyah: 1, toAyah: surahs.find(s => s.number === Number(val))?.numberOfAyahs || 1 })}>
+              <Select value={String(settings.surah)} onValueChange={val => {
+                  const newSurahNum = Number(val);
+                  const newSurah = surahs.find(s => s.number === newSurahNum);
+                  setSettings(prev => ({
+                    ...prev,
+                    surah: newSurahNum, 
+                    fromAyah: 1, 
+                    toAyah: newSurah?.numberOfAyahs || 1 
+                  }));
+              }}>
                 <SelectTrigger id="surah"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {surahs.map(s => <SelectItem key={s.number} value={String(s.number)}>{s.number}. {s.name} ({s.englishName})</SelectItem>)}
@@ -220,16 +245,16 @@ export function MemorizeView() {
             <div className="flex gap-4">
               <div>
                 <Label htmlFor="fromAyah">من آية</Label>
-                <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={settings.fromAyah} onChange={e => setSettings({...settings, fromAyah: Number(e.target.value)})} />
+                <Input id="fromAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={settings.fromAyah} onChange={e => handleSettingsChange('fromAyah', Number(e.target.value))} />
               </div>
               <div>
                 <Label htmlFor="toAyah">إلى آية</Label>
-                <Input id="toAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={settings.toAyah} onChange={e => setSettings({...settings, toAyah: Number(e.target.value)})} />
+                <Input id="toAyah" type="number" min="1" max={selectedSurah?.numberOfAyahs} value={settings.toAyah} onChange={e => handleSettingsChange('toAyah', Number(e.target.value))} />
               </div>
             </div>
             <div>
               <Label htmlFor="repetitions">التكرار لكل قارئ</Label>
-              <Input id="repetitions" type="number" min="1" value={settings.repetitions} onChange={e => setSettings({...settings, repetitions: Number(e.target.value)})} />
+              <Input id="repetitions" type="number" min="1" value={settings.repetitions} onChange={e => handleSettingsChange('repetitions', Number(e.target.value))} />
             </div>
             
             <div className="space-y-2">
@@ -256,7 +281,7 @@ export function MemorizeView() {
             <div>
               <Label htmlFor="reciters">إضافة قارئ</Label>
               {isLoading ? <Skeleton className="h-10 w-full" /> :
-              <Select onValueChange={val => !settings.selectedReciters.includes(val) && setSettings({...settings, selectedReciters: [...settings.selectedReciters, val]})}>
+              <Select onValueChange={addReciter}>
                 <SelectTrigger id="reciters"><SelectValue placeholder="اختر قارئًا لإضافته..." /></SelectTrigger>
                 <SelectContent>
                   {audioEditions
@@ -271,11 +296,11 @@ export function MemorizeView() {
             
             <div className="flex items-center justify-between">
               <Label htmlFor="auto-scroll">التمرير التلقائي</Label>
-              <Switch id="auto-scroll" checked={settings.autoScroll} onCheckedChange={val => setSettings({...settings, autoScroll: val})} />
+              <Switch id="auto-scroll" checked={settings.autoScroll} onCheckedChange={val => handleSettingsChange('autoScroll', val)} />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="loop">إعادة تشغيل المقطع</Label>
-              <Switch id="loop" checked={settings.loop} onCheckedChange={val => setSettings({...settings, loop: val})} />
+              <Switch id="loop" checked={settings.loop} onCheckedChange={val => handleSettingsChange('loop', val)} />
             </div>
 
           </div>
@@ -328,7 +353,7 @@ export function MemorizeView() {
                 {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
             </Button>
             <Button variant="ghost" size="icon" onClick={handleNext} disabled={currentTrackIndex === playlist.length-1 && !settings.loop}><SkipForward /></Button>
-            <Button variant="ghost" size="icon" onClick={() => setSettings({...settings, loop: !settings.loop})}>
+            <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('loop', !settings.loop)}>
                 {settings.loop ? <Repeat1 className="text-primary" /> : <Repeat />}
             </Button>
           </div>
@@ -342,3 +367,5 @@ export function MemorizeView() {
     </div>
   );
 }
+
+    
