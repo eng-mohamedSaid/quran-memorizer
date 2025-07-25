@@ -79,7 +79,7 @@ export function MemorizeView() {
   }, []);
   
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && isFinite(playbackRate)) {
         audioRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
@@ -509,5 +509,7 @@ export function MemorizeView() {
     </div>
   );
 }
+
+    
 
     
