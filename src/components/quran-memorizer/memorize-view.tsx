@@ -424,10 +424,8 @@ export function MemorizeView() {
                       return (
                         <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
                           <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-right w-full ${isActive ? 'bg-primary/20' : ''}`}>
-                              <span className="text-primary font-bold">﴿</span>
                                 {ayah.arabicText}
                               <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 mx-2 font-sans">{ayah.numberInSurah}</span>
-                              <span className="text-primary font-bold">﴾</span>
                           </p>
                           <p className="text-sm/relaxed text-muted-foreground font-sans mt-1 mb-4 text-left">{ayah.englishText}</p>
                            <div className="text-right">
