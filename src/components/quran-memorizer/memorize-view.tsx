@@ -101,8 +101,18 @@ export function MemorizeView() {
     }
     setPlaylist(newPlaylist);
     setCurrentTrackIndex(0);
-  }, [settings]);
+  }, [settings.fromAyah, settings.toAyah, settings.selectedReciters, settings.repetitions, settings.surah]);
 
+  const playNext = useCallback(() => {
+    if (currentTrackIndex < playlist.length - 1) {
+      setCurrentTrackIndex(currentTrackIndex + 1);
+    } else if (settings.loop) {
+      setCurrentTrackIndex(0);
+    } else {
+      setIsPlaying(false);
+    }
+  }, [currentTrackIndex, playlist.length, settings.loop]);
+  
   const playTrack = useCallback(async (index: number) => {
     if (!audioRef.current || index >= playlist.length) {
       setIsPlaying(false);
@@ -124,7 +134,7 @@ export function MemorizeView() {
       toast({ variant: "destructive", title: "خطأ", description: "ไม่สามารถเล่นไฟล์เสียงได้" });
       playNext();
     }
-  }, [playlist]);
+  }, [playlist, playNext]);
 
   useEffect(() => {
     if(isPlaying) {
@@ -134,15 +144,6 @@ export function MemorizeView() {
     }
   }, [isPlaying, currentTrackIndex, playTrack]);
 
-  const playNext = useCallback(() => {
-    if (currentTrackIndex < playlist.length - 1) {
-      setCurrentTrackIndex(currentTrackIndex + 1);
-    } else if (settings.loop) {
-      setCurrentTrackIndex(0);
-    } else {
-      setIsPlaying(false);
-    }
-  }, [currentTrackIndex, playlist.length, settings.loop]);
   
   const handleAudioEnded = () => {
     playNext();
@@ -329,7 +330,7 @@ export function MemorizeView() {
                 {settings.loop ? <Repeat1 className="text-primary" /> : <Repeat />}
             </Button>
           </div>
-          {playlist.length > 0 && 
+          {playlist.length > 0 && currentTrackIndex < playlist.length &&
             <div className="text-center text-sm text-muted-foreground mt-2">
                 {`الآية ${playlist[currentTrackIndex]?.ayah}, القارئ: ${audioEditions.find(e => e.identifier === playlist[currentTrackIndex]?.reciterId)?.name || ''} (${(currentTrackIndex % settings.repetitions) + 1}/${settings.repetitions})`}
             </div>
