@@ -79,8 +79,7 @@ export function MemorizeView() {
       setIsLoading(false);
     }
     loadInitialData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadAyahs]);
+  }, [loadAyahs, settings.surah]);
   
   useEffect(() => {
     if (settings.surah) {
