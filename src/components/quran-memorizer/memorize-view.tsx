@@ -430,14 +430,14 @@ export function MemorizeView() {
         <Card className="flex-grow">
           <ScrollArea className="h-[calc(100vh-220px)] lg:h-[calc(100vh-160px)]">
             {showAyahs ? (
-                <div className="p-6 text-2xl/loose leading-loose font-serif">
+                <div className="p-6 text-2xl/loose leading-loose">
                   {ayahsData.length > 0 ? displayedAyahs
                     .map(ayah => {
                       const currentTrack = playlist[currentTrackIndex];
                       const isActive = isPlaying && currentTrack?.ayah === ayah.numberInSurah;
                       return (
                         <div key={ayah.numberInSurah} ref={isActive ? currentAyahRef : null}>
-                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-right w-full ${isActive ? 'bg-primary/20' : ''}`}>
+                          <p className={`inline-block p-2 rounded-md transition-colors duration-300 text-right w-full font-quran ${isActive ? 'bg-primary/20' : ''}`}>
                                 {ayah.arabicText}
                               <span className="text-sm text-primary-foreground bg-primary rounded-full px-2 py-1 mx-2 font-sans">{ayah.numberInSurah}</span>
                           </p>
