@@ -17,7 +17,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Amiri+Quran&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
         <link
           rel="icon"
           type="image/png"
