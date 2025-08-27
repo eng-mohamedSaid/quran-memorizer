@@ -189,9 +189,21 @@ export default function LandingPage() {
         </section>
 
       </main>
-      <footer className="flex flex-col items-center justify-center h-20 border-t bg-card space-y-2">
-        <p className="text-sm text-muted-foreground text-center">© 2025 صاحب القرآن. جميع الحقوق محفوظة.</p>
-        <p className="text-xs text-muted-foreground/80">📍 صنع بحب في بلاد المسلمين</p>
+      <footer className="flex flex-col items-center justify-center py-6 border-t bg-card space-y-4">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-sm text-muted-foreground text-center">© 2025 صاحب القرآن. جميع الحقوق محفوظة.</p>
+          <p className="text-xs text-muted-foreground/80">📍 صنع بحب في بلاد المسلمين</p>
+        </div>
+        <Button variant="outline" size="lg" asChild className="group">
+          <Link 
+            href="https://www.linkedin.com/in/mohamedsaidredwan/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2"
+          >
+            <span>تواصل معنا إن واجهتك أي مشكلة</span>
+          </Link>
+        </Button>
       </footer>
     </div>
   );
